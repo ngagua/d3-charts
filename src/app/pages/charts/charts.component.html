@@ -1,0 +1,28 @@
+<div class="flex w-full gap-4 p-4">
+    <div class="flex flex-col w-full">
+        <div
+            *ngIf="url === urls.PIE_CHART"
+            class="bg-gray-200 charts-container rounded relative"
+        >
+            <div class="absolute top-1 left-1 w-36">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Choose an option</mat-label>
+                    <mat-select (selectionChange)="setPieData($event)" [value]="'now'">
+                        <mat-option value="now">Now</mat-option>
+                        <mat-option value="before">Before</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <app-pie-chart [data]="pieData"></app-pie-chart>
+        </div>
+        <div *ngIf="url === urls.LINE_CHART" class="bg-gray-200 charts-container rounded">
+            <line-chart
+                *ngIf="covidData$ | async as covidData"
+                [data]="covidData"
+            ></line-chart>
+        </div>
+        <div *ngIf="url === urls.BAR_CHART" class="bg-gray-200 charts-container rounded">
+            <app-chart2 [data]="data$ | async"></app-chart2>
+        </div>
+    </div>
+</div>

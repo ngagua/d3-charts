@@ -1,0 +1,44 @@
+<div class="h-full w-full">
+    <ng-container>
+        <mat-toolbar class="example-header">
+            <button
+                (click)="sidenav.toggle()"
+                aria-label="open and close side menu"
+                class="mr-4"
+                type="button"
+            >
+                <mat-icon *ngIf="sidenav.opened; else closeIcon"> menu_rounded</mat-icon>
+            </button>
+        </mat-toolbar>
+
+        <mat-sidenav-container class="example-container">
+            <mat-sidenav #sidenav class="example-sidenav" mode="side" opened>
+                <mat-nav-list>
+                    <ng-container *ngFor="let menuItem of menuItems">
+                        <a
+                            [routerLink]="[menuItem?.navigationLink]"
+                            class="!flex flex-row gap-3 !rounded-3xl !p-4"
+                            mat-list-item
+                            routerLinkActive="active"
+                        >
+                            <span class="!text-s-b" matLine>
+                                {{ menuItem.menuItemTitle }}
+                            </span>
+                            <mat-icon fontSet="material-symbols-rounded">
+                                {{ menuItem.icon }}
+                            </mat-icon>
+                        </a>
+                    </ng-container>
+                </mat-nav-list>
+            </mat-sidenav>
+
+            <mat-sidenav-content>
+                <router-outlet></router-outlet>
+            </mat-sidenav-content>
+        </mat-sidenav-container>
+    </ng-container>
+</div>
+
+<ng-template #closeIcon>
+    <mat-icon>close_rounded</mat-icon>
+</ng-template>

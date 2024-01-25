@@ -76,3 +76,9 @@ export interface CovidData {
     totalTestResults: number
     totalTestResultsIncrease: number
 }
+
+export interface MenuItem {
+    menuItemTitle: string
+    navigationLink?: string
+    icon: string
+}
