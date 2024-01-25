@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
 import { HttpClient } from '@angular/common/http'
 import { map, Observable } from 'rxjs'
-import { Browser, CovidData, Employee } from '../models/models'
+import { Browser, CovidData, Employee, USSpendingData } from '../models/models'
 
 @Injectable({
     providedIn: 'root',
@@ -26,6 +26,11 @@ export class ApiService {
 
     getBrowsers(): Observable<Browser[]> {
         const url = 'assets/browsers.json'
+        return this.getJSON(url)
+    }
+
+    getSpending(): Observable<USSpendingData[]> {
+        const url = 'assets/us-spending.json'
         return this.getJSON(url)
     }
 }

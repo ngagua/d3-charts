@@ -8,7 +8,12 @@ import { MatOptionModule } from '@angular/material/core'
 import { MatSelectChange, MatSelectModule } from '@angular/material/select'
 import { ApiService } from '../../services/api.service'
 import * as d3 from 'd3'
-import { Browser, PieData } from '../../models/models'
+import {
+    Browser,
+    PieData,
+    USSpendingData,
+    USSpendingDataElement,
+} from '../../models/models'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
 import { PieHelper } from '../../helpers/helper'
 import { PieChartComponent } from '../../charts/pie-chart/pie-chart.component'
@@ -48,12 +53,22 @@ export class ChartsComponent implements OnInit {
     data$ = this.apiService.getEmployees()
     covidData$ = this.apiService.getCovidData()
     browserData$ = this.apiService.getBrowsers().pipe(takeUntilDestroyed())
+    usSpending$ = this.apiService.getSpending().pipe(takeUntilDestroyed())
+    usSpending: USSpendingData[] = []
+    mappedData: USSpendingDataElement[] = []
+    years: string[] = []
 
     ngOnInit(): void {
-        console.log(this.url)
         this.browserData$.subscribe((data: Browser[]) => {
             this.browserData = data
-            this.setPieData('now')
+            // this.setPieData('now')
+            console.log('usSpending', this.browserData)
+        })
+        this.usSpending$.subscribe((data: USSpendingData[]) => {
+            this.usSpending = data
+            this.mappedData = this.mapUSSpendingData(data)
+            this.years = [...new Set(this.mappedData.map((item) => item.year))]
+            this.filterByYear(this.years[0])
         })
     }
 
@@ -66,5 +81,40 @@ export class ChartsComponent implements OnInit {
             'name',
             'name'
         )
+    }
+
+    filterByYear(event: MatSelectChange | string): void {
+        const valueAttr = typeof event === 'string' ? event : event.value
+        const filteredData = this.mappedData.filter((item) => item.year === valueAttr)
+
+        this.pieData = PieHelper.convert(
+            filteredData,
+            'US Spending by Department. ',
+            'expense',
+            'department',
+            'department'
+        )
+    }
+
+    mapUSSpendingData(data: USSpendingData[]): USSpendingDataElement[] {
+        const mappedData: USSpendingDataElement[] = []
+
+        data.forEach((item) => {
+            const department = item['Department']
+
+            Object.keys(item).forEach((key) => {
+                if (key !== 'Department') {
+                    const year = key
+                    const expense = item[key]
+                    mappedData.push({
+                        department,
+                        year,
+                        expense: +expense,
+                    })
+                }
+            })
+        })
+
+        return mappedData
     }
 }

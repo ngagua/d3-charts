@@ -4,12 +4,16 @@
             *ngIf="url === urls.PIE_CHART"
             class="bg-gray-200 charts-container rounded relative"
         >
-            <div class="absolute top-1 left-1 w-36">
+            <div class="absolute top-1 left-1 w-32">
                 <mat-form-field appearance="outline" class="w-full">
-                    <mat-label>Choose an option</mat-label>
-                    <mat-select (selectionChange)="setPieData($event)" [value]="'now'">
-                        <mat-option value="now">Now</mat-option>
-                        <mat-option value="before">Before</mat-option>
+                    <mat-label>Year</mat-label>
+                    <mat-select
+                        (selectionChange)="filterByYear($event)"
+                        [value]="years[0]"
+                    >
+                        @for (year of years; track year) {
+                            <mat-option [value]="year">{{ year }}</mat-option>
+                        }
                     </mat-select>
                 </mat-form-field>
             </div>

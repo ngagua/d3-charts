@@ -7,7 +7,7 @@ import {
     SimpleChanges,
 } from '@angular/core'
 import * as d3 from 'd3'
-import { PieConfig, PieData } from '../../models/models'
+import { PieConfig, PieData, PieDataElement } from '../../models/models'
 
 @Component({
     selector: 'app-pie-chart',
@@ -20,7 +20,7 @@ export class PieChartComponent implements OnInit, OnChanges {
     @Input() data: PieData | null | undefined
 
     config: PieConfig = {
-        innerRadiusCoef: 0.7,
+        innerRadiusCoef: 0.65,
         hiddenOpacity: 0.3,
         legendItem: {
             symbolSize: 10,
@@ -37,8 +37,8 @@ export class PieChartComponent implements OnInit, OnChanges {
         },
         margins: {
             left: 10,
-            top: 40,
-            right: 100,
+            top: 100,
+            right: 400,
             bottom: 10,
         },
     }
@@ -117,7 +117,7 @@ export class PieChartComponent implements OnInit, OnChanges {
             .attr('class', 'data-container')
             .attr(
                 'transform',
-                `translate(${this.margins.left + 0.5 * this.innerWidth}, ${this.margins.top + 0.5 * this.innerHeight})`
+                `translate(${this.margins.left + 0.5 * this.dimensions.width}, ${this.margins.top + 0.5 * this.innerHeight})`
             )
 
         this.legendContainer = this.svg
@@ -137,6 +137,8 @@ export class PieChartComponent implements OnInit, OnChanges {
             )
             .append('text')
             .attr('class', 'title')
+            .attr('font-size', '1.5rem')
+            .attr('font-weight', 'bold')
             .style('text-anchor', 'middle')
     }
 
@@ -221,8 +223,8 @@ export class PieChartComponent implements OnInit, OnChanges {
 
         this.legendContainer.attr(
             'transform',
-            `translate(${this.dimensions.width - this.margins.right},
-            ${this.margins.top + 0.5 * this.innerHeight - 0.5 * dimensions.height})`
+            `translate(${this.margins.left},
+            ${this.margins.top})`
         )
     }
 
@@ -297,11 +299,45 @@ export class PieChartComponent implements OnInit, OnChanges {
             .style('fill', (d: any) => this.colors(d.data.id))
             .style('stroke', this.config.arcs.stroke)
             .style('stroke-width', this.config.arcs.strokeWidth)
-            .on('mouseenter', (event: any, d: any) => this.sethHighlights(d.data.id))
+            .on('mouseover', (event: MouseEvent, d: any) => {
+                this.setToolTip(event, d.data)
+                this.sethHighlights(d.data.id)
+            })
             .on('mouseleave', () => this.resetHighlights())
             .transition()
             .duration(1000)
             .attrTween('d', enterArcTween)
+
+        this.dataContainer
+            .selectAll('text.percent')
+            .data(data, (d: any) => d.data.id)
+            .join('text')
+            .attr('class', 'percent')
+            .text((d: any) => d.data.percent)
+            .text((d: any) => this.calculatePercentage(d.data))
+            .attr('transform', (d: PieData) => `translate(${this.arc.centroid(d)})`)
+            .attr('dy', '0.35rem')
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '0,8rem')
+            .attr('font-weight', 'bold')
+            .attr('cursor', 'pointer')
+    }
+
+    setToolTip(event: MouseEvent, data: PieDataElement) {
+        const tooltip = d3
+            .select('body')
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('opacity', 1)
+            .style('left', `${event.pageX}px`)
+            .style('top', `${event.pageY}px`)
+        tooltip.html(
+            `
+                <p><strong>Department:</strong> ${data.label}</p>
+                <p><strong>Spending:</strong> ${d3.format('$,.0f')(+data.value)}</p>
+                <p><strong>Percentage:</strong> ${this.calculatePercentage(data)}</p>`
+        )
+        d3.select(event.target as any).on('mouseout', () => tooltip.remove())
     }
 
     sethHighlights(id: string) {
@@ -332,6 +368,15 @@ export class PieChartComponent implements OnInit, OnChanges {
     toggleHighlight(id: string) {
         this.hiddenIds.has(id) ? this.hiddenIds.delete(id) : this.hiddenIds.set(id, true)
         this.updateChart()
+    }
+
+    calculatePercentage(data: PieDataElement) {
+        if (!this.data) return ''
+        const total = d3.sum(
+            this.data?.data.filter((e) => !this.hiddenIds.has(e.id)),
+            (d: any) => d.value
+        )
+        return ((+data.value / total) * 100).toFixed(2) + '%'
     }
 
     updateChart() {

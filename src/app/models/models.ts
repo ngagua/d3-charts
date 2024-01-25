@@ -82,3 +82,15 @@ export interface MenuItem {
     navigationLink?: string
     icon: string
 }
+
+export interface USSpendingData {
+    Department: string
+
+    [year: string]: string
+}
+
+export interface USSpendingDataElement {
+    department: string
+    year: string
+    expense: number
+}
