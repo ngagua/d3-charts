@@ -1,0 +1,27 @@
+# Add files here to ignore them from prettier formatting
+
+
+.angular
+.github
+.gradle
+.husky
+.vscode
+.idea
+.lighthouserc.js
+.editorconfig
+.eslintrc.json
+.prettierrc
+angular.json
+nx.json
+nginx.conf
+docker-compose.yml
+dockerfile
+/dist
+/coverage
+/.yarn
+tmp
+/test
+/build
+node_modules
+/package.json
+/package-lock.json

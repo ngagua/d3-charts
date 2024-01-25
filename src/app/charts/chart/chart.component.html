@@ -1,0 +1,29 @@
+<svg class="bg-orange-500 w-full h-full">
+    <line
+        [attr.x1]="0.5 * padding + outerPadding"
+        [attr.x2]="innerWidth - (0.5 * padding + outerPadding)"
+        [attr.y1]="innerHeight + top + 2"
+        [attr.y2]="innerHeight + top + 2"
+        class="stroke-black"
+    ></line>
+    @for (rect of data; track rect; let index = $index) {
+        <rect
+            [attr.x]="index * rectWidth + 0.5 * padding + outerPadding"
+            [attr.y]="innerHeight - (innerHeight / max) * rect + top"
+            [attr.width]="bandWidth"
+            [attr.height]="(innerHeight / max) * rect"
+            class="fill-blue-500 stroke-2 stroke-white"
+        ></rect>
+        @for (text of xLabels; track text; let index = $index) {
+            <text
+                class=""
+                [attr.y]="dimensions.height - 2"
+                [attr.x]="
+                    index * rectWidth + 0.5 * padding + outerPadding + 0.5 * bandWidth
+                "
+            >
+                {{ text }}
+            </text>
+        }
+    }
+</svg>
