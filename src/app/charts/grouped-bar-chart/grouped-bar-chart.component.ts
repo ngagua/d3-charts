@@ -46,6 +46,7 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
         Department.DepartmentOfHealthAndHumanServices,
         Department.DepartmentOfHomelandSecurity,
     ]
+    active = [true, true, true, true]
     xScale = d3.scaleBand().paddingInner(0.2).paddingOuter(0.2)
     yScale = d3.scaleLinear()
     group = d3.scaleBand().padding(0.1)
@@ -55,16 +56,18 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
     }
 
     get filteredData() {
-        return this.stacked ? this.data : this.data?.slice(-5)
+        const data = this.data?.map((d) => ({
+            year: d.year,
+            data: d.data.filter((item, i) => {
+                const index = this.selected.indexOf(item.department as Department)
+                return index !== -1 && this.active[index]
+            }),
+        }))
+
+        return this.stacked ? data : data?.slice(-5)
     }
 
     ngOnInit(): void {
-        this.data = d3
-            .groups(this.chartData || [], (d) => d.year)
-            .map((element) => ({
-                year: +element[0],
-                data: element[1],
-            }))
         this.svg = this.host.select('svg')
         this.setDimensions()
         this.setElements()
@@ -183,14 +186,17 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
     }
 
     draw(): void {
+        this.dataContainer.selectAll('g.group').remove()
         const bars = this.dataContainer
             .selectAll('g.group')
-            .data(this.filteredData || [], (d: any) => d?.year)
+            .data(this.filteredData, (d: any) => d?.year)
 
         if (this.stacked) {
+            console.log(this.filteredData)
             bars.enter()
                 .append('g')
-                .attr('class', 'bar-group')
+                .data(this.filteredData, (d: any) => d?.year)
+                .attr('class', 'group')
                 .selectAll('rect')
                 .data((d: any) => d.data.sort((a: any, b: any) => b.expense - a.expense))
                 .attr('padding', 10)
@@ -218,6 +224,8 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
                         ?.data.sort((a, b) => (b.expense < a.expense ? 1 : -1))
                 )
                 .join('rect')
+                // .transition()
+                // .duration(500)
                 .attr('x', (d: USSpendingDataElement) => {
                     return (this.xScale(d.year) as any) + this.group(d.department)
                 })
@@ -283,6 +291,21 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
             .merge(legend)
             .call(updateLegendItems)
             .attr('transform', (d: any, i: any) => `translate(0, ${i * 16})`)
+            .attr('cursor', 'pointer')
+            .on('mouseenter', (event: any, name: string) => {
+                this.hover(name)
+            })
+            .on('mouseleave', (event: any, name: string) => {
+                this.hover()
+            })
+            .on('click', (event: any, name: string) => {
+                this.toggleActive(name)
+                this.updateChart()
+            })
+            .transition()
+            .duration(500)
+            .style('cursor', 'pointer')
+            .style('opacity', (d: any, i: any) => (this.active[i] ? 1 : 0.3))
 
         legend.exit().remove()
 
@@ -293,5 +316,24 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
             'transform',
             `translate(${this.left + 0.5 * (this.innerWidth - legendWidth)}, ${this.dimensions.height - legendHeight})`
         )
+    }
+
+    toggleActive(selected: string): void {
+        const index = this.selected.indexOf(selected as Department)
+        this.active[index] = !this.active[index]
+    }
+
+    hover(selected?: string): void {
+        const index = this.selected.indexOf((selected as Department) || '')
+
+        if (selected) {
+            this.dataContainer
+                .selectAll('rect')
+                .style('opacity', (d: USSpendingDataElement) => {
+                    return d.department === selected ? 1 : 0.1
+                })
+        } else {
+            this.dataContainer.selectAll('rect').style('opacity', 1)
+        }
     }
 }
