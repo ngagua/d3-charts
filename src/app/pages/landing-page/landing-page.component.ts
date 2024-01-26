@@ -56,5 +56,10 @@ export class LandingPageComponent {
             icon: 'bar_chart',
             navigationLink: 'charts/bar-chart',
         },
+        {
+            menuItemTitle: 'Grouped',
+            icon: 'grouped_bar_chart',
+            navigationLink: 'charts/grouped-bar-chart',
+        },
     ]
 }

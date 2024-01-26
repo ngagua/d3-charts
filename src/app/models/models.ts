@@ -95,6 +95,11 @@ export interface USSpendingDataElement {
     expense: number
 }
 
+export interface MappedForGroupedData {
+    year: number
+    data: USSpendingDataElement[]
+}
+
 export interface MappedForLineChart {
     year: string
     [Department.DepartmentOfDefenseMilitaryPrograms]: number

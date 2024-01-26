@@ -41,5 +41,11 @@
             </div>
             <bar-chart [data]="mappedForBar"></bar-chart>
         </div>
+        <div
+            *ngIf="url === urls.GROUPED_BAR_CHART"
+            class="bg-gray-200 charts-container rounded"
+        >
+            <grouped-bar-chart [data]="mappedForGrouped"></grouped-bar-chart>
+        </div>
     </div>
 </div>

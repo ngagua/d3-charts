@@ -10,16 +10,18 @@ import { ApiService } from '../../services/api.service'
 import * as d3 from 'd3'
 import {
     Browser,
+    MappedForGroupedData,
     MappedForLineChart,
     PieData,
     USSpendingData,
     USSpendingDataElement,
 } from '../../models/models'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop'
-import { PieHelper } from '../../helpers/helper'
+import { convert, mapDataToInterfaces } from '../../helpers/helper'
 import { PieChartComponent } from '../../charts/pie-chart/pie-chart.component'
 import { Router } from '@angular/router'
 import { URLS } from '../../models/enum'
+import { GroupedBarChartComponent } from '../../charts/grouped-bar-chart/grouped-bar-chart.component'
 
 @Component({
     selector: 'app-charts',
@@ -34,6 +36,7 @@ import { URLS } from '../../models/enum'
         MatSelectModule,
         PieChartComponent,
         NgIf,
+        GroupedBarChartComponent,
     ],
     providers: [ApiService],
     templateUrl: './charts.component.html',
@@ -58,6 +61,7 @@ export class ChartsComponent implements OnInit {
     usSpending: USSpendingData[] = []
     mappedData: USSpendingDataElement[] = []
     mappedForBar: USSpendingDataElement[] = []
+    mappedForGrouped: MappedForGroupedData[] = []
     mappedForLine: MappedForLineChart[] = []
     years: string[] = []
     departments: string[] = []
@@ -72,6 +76,9 @@ export class ChartsComponent implements OnInit {
             ]
             this.filterByYear(this.years[0])
             this.filterByDepartment(this.departments[0])
+            this.mappedForGrouped = mapDataToInterfaces(this.mappedData)
+
+            console.log('this.mappedfffData', this.mappedForGrouped)
 
             this.mappedForLine = this.mappedData.reduce((acc: any, curr) => {
                 const existingYear: any = acc.find((item: any) => item.year === curr.year)
@@ -92,7 +99,7 @@ export class ChartsComponent implements OnInit {
 
     setPieData(event: MatSelectChange | string): void {
         const valueAttr = typeof event === 'string' ? event : event.value
-        this.pieData = PieHelper.convert(
+        this.pieData = convert(
             this.browserData,
             'Browser market shares. ',
             valueAttr,
@@ -105,7 +112,7 @@ export class ChartsComponent implements OnInit {
         const valueAttr = typeof event === 'string' ? event : event.value
         const filteredData = this.mappedData.filter((item) => item.year === valueAttr)
 
-        this.pieData = PieHelper.convert(
+        this.pieData = convert(
             filteredData,
             'US Spending by Department. ',
             'expense',

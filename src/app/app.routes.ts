@@ -23,6 +23,10 @@ export const routes: Routes = [
                 path: 'bar-chart',
                 component: ChartsComponent,
             },
+            {
+                path: 'grouped-bar-chart',
+                component: ChartsComponent,
+            },
         ],
     },
 ]
