@@ -57,15 +57,21 @@ export class ChartsComponent implements OnInit {
     usSpending$ = this.apiService.getSpending().pipe(takeUntilDestroyed())
     usSpending: USSpendingData[] = []
     mappedData: USSpendingDataElement[] = []
+    mappedForBar: USSpendingDataElement[] = []
     mappedForLine: MappedForLineChart[] = []
     years: string[] = []
+    departments: string[] = []
 
     ngOnInit(): void {
         this.usSpending$.subscribe((data: USSpendingData[]) => {
             this.usSpending = data
             this.mappedData = this.mapUSSpendingData(data)
             this.years = [...new Set(this.mappedData.map((item) => item.year))]
+            this.departments = [
+                ...new Set(this.mappedData.map((item) => item.department)),
+            ]
             this.filterByYear(this.years[0])
+            this.filterByDepartment(this.departments[0])
 
             this.mappedForLine = this.mappedData.reduce((acc: any, curr) => {
                 const existingYear: any = acc.find((item: any) => item.year === curr.year)
@@ -105,6 +111,13 @@ export class ChartsComponent implements OnInit {
             'expense',
             'department',
             'department'
+        )
+    }
+
+    filterByDepartment(event: MatSelectChange | string): void {
+        const valueAttr = typeof event === 'string' ? event : event.value
+        this.mappedForBar = this.mappedData.filter(
+            (item) => item.department === valueAttr
         )
     }
 

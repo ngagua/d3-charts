@@ -22,8 +22,24 @@
         <div *ngIf="url === urls.LINE_CHART" class="bg-gray-200 charts-container rounded">
             <line-chart [data]="mappedForLine"></line-chart>
         </div>
-        <div *ngIf="url === urls.BAR_CHART" class="bg-gray-200 charts-container rounded">
-            <app-chart2 [data]="data$ | async"></app-chart2>
+        <div
+            *ngIf="url === urls.BAR_CHART"
+            class="bg-gray-200 relative charts-container rounded"
+        >
+            <div class="">
+                <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Year</mat-label>
+                    <mat-select
+                        (selectionChange)="filterByDepartment($event)"
+                        [value]="departments[0]"
+                    >
+                        @for (department of departments; track department) {
+                            <mat-option [value]="department">{{ department }}</mat-option>
+                        }
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            <app-chart2 [data]="mappedForBar"></app-chart2>
         </div>
     </div>
 </div>

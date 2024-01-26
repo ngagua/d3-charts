@@ -1,6 +1,6 @@
 import { Component, ElementRef, Input, OnChanges, OnInit } from '@angular/core'
 import * as d3 from 'd3'
-import { Employee } from '../../models/models'
+import { Department, USSpendingDataElement } from '../../models/models'
 
 @Component({
     selector: 'app-chart2',
@@ -10,7 +10,7 @@ import { Employee } from '../../models/models'
     imports: [],
 })
 export class Chart2Component implements OnInit, OnChanges {
-    @Input() data: Employee[] | null | undefined
+    @Input() data: USSpendingDataElement[] | null | undefined
     host: any
     svg: any
     dataContainer: any
@@ -30,7 +30,14 @@ export class Chart2Component implements OnInit, OnChanges {
     bottom = 80
     top = 15
     dataIsFiltered = false
-    sortedBySalary = true
+    sortedBySalary = false
+    colors: any
+    selected = [
+        Department.DepartmentOfDefenseMilitaryPrograms,
+        Department.DepartmentOfEducation,
+        Department.DepartmentOfHealthAndHumanServices,
+        Department.DepartmentOfHomelandSecurity,
+    ]
     x = d3.scaleBand().paddingInner(0.2).paddingOuter(0.2)
     y = d3.scaleLinear()
 
@@ -39,16 +46,13 @@ export class Chart2Component implements OnInit, OnChanges {
     }
 
     get barsData() {
-        // return this.dataIsFiltered
-        //     ? this.data?.filter((d: Employee, i) => i < 12)
-        //     : this.data
-
         return this.sortedBySalary
             ? this.data?.sort(
-                  (a: Employee, b: Employee) => +b.employee_salary - +a.employee_salary
+                  (a: USSpendingDataElement, b: USSpendingDataElement) =>
+                      +b.expense - +a.expense
               )
-            : this.data?.sort((a: Employee, b: Employee) =>
-                  a.employee_name.localeCompare(b.employee_name)
+            : this.data?.sort((a: USSpendingDataElement, b: USSpendingDataElement) =>
+                  +a.year < +b.year ? -1 : 1
               )
     }
 
@@ -94,12 +98,14 @@ export class Chart2Component implements OnInit, OnChanges {
             .attr('transform', `translate(15, ${this.top - 5})`)
             .append('text')
             .attr('class', 'label')
-            .text('Employee Salary')
+            .text('US Spending by Department.')
             .attr(
                 'transform',
                 `translate(${this.left + 0.5 * this.innerWidth}, ${this.top - 5})`
             )
             .attr('text-anchor', 'middle')
+            .attr('font-size', '1.5rem')
+            .attr('font-weight', 'bold')
     }
 
     setDimensions(): void {
@@ -128,34 +134,59 @@ export class Chart2Component implements OnInit, OnChanges {
 
     setParams(): void {
         if (!this.barsData || !this.data) return
-        const ids = this.barsData?.map((d: Employee) => d?.id)
+        const ids = this.barsData?.map((d: USSpendingDataElement) => d?.year)
         const max_salary =
-            1.3 * Math.max(...this.data?.map((d: Employee) => d?.employee_salary))
+            1.3 * Math.max(...this.data?.map((d: USSpendingDataElement) => +d?.expense))
 
         this.x.domain(ids).range([0, this.innerWidth])
         this.y.domain([0, max_salary]).range([this.innerHeight, 0])
+
+        const colorDomain = this.selected
+        const colorRange = d3.schemeCategory10
+        this.colors = d3.scaleOrdinal().domain(colorDomain).range(colorRange)
     }
 
     draw(): void {
         const bars = this.dataContainer
             .selectAll('rect')
-            .data(this.barsData || [], (d: Employee) => d?.id)
+            .data(this.barsData || [], (d: USSpendingDataElement) => d?.year)
 
         bars.enter()
             .append('rect')
+            .attr('class', 'bar')
+            .on('mouseover', (event: MouseEvent, d: any) => {
+                this.setToolTip(event, d)
+            })
             .merge(bars)
             .transition()
             .duration(500)
-            .attr('x', (d: Employee, i: number) => this.x(d?.id))
+            .attr('x', (d: USSpendingDataElement, i: number) => this.x(d?.year))
             .attr('width', this.x.bandwidth())
             .attr(
                 'height',
-                (d: Employee) => this.innerHeight - this.y(d?.employee_salary)
+                (d: USSpendingDataElement) => this.innerHeight - this.y(d?.expense)
             )
-            .style('fill', 'blue')
-            .attr('y', (d: Employee) => this.y(d?.employee_salary))
+            .style('fill', (d: USSpendingDataElement) => this.colors(d?.department))
+            .attr('y', (d: USSpendingDataElement) => this.y(d?.expense))
 
         bars.exit().remove()
+    }
+
+    setToolTip(event: MouseEvent, data: USSpendingDataElement) {
+        const tooltip = d3
+            .select('body')
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('opacity', 1)
+            .style('left', `${event.pageX + 10}px`)
+            .style('top', `${event.pageY + 10}px`)
+        tooltip.html(
+            `
+                <p><strong>Department:</strong> ${data.department}</p>
+                <p><strong>Spending:</strong> ${d3.format('$,.0f')(+data.expense)}</p>
+                <p><strong>Year:</strong> ${data.year}</p>`
+        )
+        d3.select(event.target as any).on('mouseout', () => tooltip.remove())
     }
 
     setXAxes(): void {
@@ -164,7 +195,7 @@ export class Chart2Component implements OnInit, OnChanges {
 
             xAxisContainer
                 .selectAll('.tick text')
-                .text((d: string) => this.getEmployeeName(d))
+                .text((d: string) => this.getYear(d))
                 .attr('transform', 'translate(-9, 2)rotate(-45)')
                 .attr('text-anchor', 'end')
         }
@@ -181,7 +212,7 @@ export class Chart2Component implements OnInit, OnChanges {
         this.yAxesContainer.selectAll('.tick line').attr('stroke', '#ddd')
     }
 
-    getEmployeeName(id: string) {
-        return this.data?.find((d: Employee) => d.id === id)?.employee_name
+    getYear(id: string) {
+        return this.data?.find((d: USSpendingDataElement) => d.year === id)?.year
     }
 }
