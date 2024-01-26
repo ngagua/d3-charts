@@ -158,16 +158,19 @@ export class BarChartComponent implements OnInit, OnChanges {
                 this.setToolTip(event, d)
             })
             .merge(bars)
+            .attr('height', (d: any) => this.innerHeight - this.y(0))
+            .attr('y', (d: any) => this.y(0))
             .transition()
             .duration(500)
             .attr('x', (d: USSpendingDataElement, i: number) => this.x(d?.year))
             .attr('width', this.x.bandwidth())
+            .attr('y', (d: USSpendingDataElement) => this.y(d.expense))
             .attr(
                 'height',
-                (d: USSpendingDataElement) => this.innerHeight - this.y(d?.expense)
+                (d: USSpendingDataElement) => this.innerHeight - this.y(d.expense)
             )
+            .delay((d: USSpendingDataElement, i: number) => i * 50)
             .style('fill', (d: USSpendingDataElement) => this.colors(d?.department))
-            .attr('y', (d: USSpendingDataElement) => this.y(d?.expense))
 
         bars.exit().remove()
     }

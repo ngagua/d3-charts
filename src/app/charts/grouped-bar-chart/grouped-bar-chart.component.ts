@@ -150,7 +150,7 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
         this.xScale.domain(ids).range([0, this.innerWidth])
         this.yScale.domain([0, maxValue as number]).range([this.innerHeight, 0])
 
-        const groups = [...new Set(this.chartData?.map((d) => d.department))]
+        const groups = this.selected?.filter((d, i) => this.active[i])
         this.group.domain(groups).range([0, this.xScale.bandwidth()])
 
         const colorDomain = this.selected
@@ -192,7 +192,6 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
             .data(this.filteredData, (d: any) => d?.year)
 
         if (this.stacked) {
-            console.log(this.filteredData)
             bars.enter()
                 .append('g')
                 .data(this.filteredData, (d: any) => d?.year)
@@ -207,10 +206,19 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
                     this.setToolTip(event, d)
                 })
                 .attr('x', (d: any) => this.xScale(d.year))
-                .attr('y', (d: any) => this.yScale(d.expense))
+                .attr('height', (d: any) => this.innerHeight - this.yScale(0))
+                .attr('y', (d: any) => this.yScale(0))
                 .attr('width', this.xScale.bandwidth())
-                .attr('height', (d: any) => this.innerHeight - this.yScale(d.expense))
                 .attr('fill', (d: any) => this.colors(d.department))
+                .transition()
+                .duration(500)
+                .attr('y', (d: USSpendingDataElement) => this.yScale(d.expense))
+                .attr(
+                    'height',
+                    (d: USSpendingDataElement) =>
+                        this.innerHeight - this.yScale(d.expense)
+                )
+                .delay((d: USSpendingDataElement, i: number) => i * 100)
         } else {
             bars.enter()
                 .selectAll('g.group')
@@ -224,18 +232,25 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
                         ?.data.sort((a, b) => (b.expense < a.expense ? 1 : -1))
                 )
                 .join('rect')
-                // .transition()
-                // .duration(500)
+                .attr('height', (d: any) => this.innerHeight - this.yScale(0))
+                .attr('y', (d: any) => this.yScale(0))
                 .attr('x', (d: USSpendingDataElement) => {
                     return (this.xScale(d.year) as any) + this.group(d.department)
                 })
                 .attr('width', this.group.bandwidth())
-                .attr('y', (d: any) => this.yScale(Number(d.expense)))
-                .attr('height', (d: any) => this.innerHeight - this.yScale(d.expense))
                 .attr('fill', (d: any) => this.colors(d.department))
                 .on('mouseover', (event: MouseEvent, d: any) => {
                     this.setToolTip(event, d)
                 })
+                .transition()
+                .duration(500)
+                .attr('y', (d: USSpendingDataElement) => this.yScale(d.expense))
+                .attr(
+                    'height',
+                    (d: USSpendingDataElement) =>
+                        this.innerHeight - this.yScale(d.expense)
+                )
+                .delay((d: USSpendingDataElement, i: number) => i * 100)
         }
 
         bars.exit().remove()
