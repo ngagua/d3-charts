@@ -3,13 +3,13 @@ import * as d3 from 'd3'
 import { Department, USSpendingDataElement } from '../../models/models'
 
 @Component({
-    selector: 'app-chart2',
+    selector: 'bar-chart',
     standalone: true,
     template: ` <svg></svg>`,
-    styleUrl: './chart2.component.scss',
+    styleUrl: './bar-chart.component.scss',
     imports: [],
 })
-export class Chart2Component implements OnInit, OnChanges {
+export class BarChartComponent implements OnInit, OnChanges {
     @Input() data: USSpendingDataElement[] | null | undefined
     host: any
     svg: any

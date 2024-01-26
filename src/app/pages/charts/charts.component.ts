@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core'
 import { AsyncPipe, NgIf } from '@angular/common'
-import { Chart2Component } from '../../charts/chart2/chart2.component'
+import { BarChartComponent } from '../../charts/bar-chart/bar-chart.component'
 import { ChartComponent } from '../../charts/chart/chart.component'
 import { LineChartComponent } from '../../charts/line-chart/line-chart.component'
 import { MatFormFieldModule } from '@angular/material/form-field'
@@ -26,7 +26,7 @@ import { URLS } from '../../models/enum'
     standalone: true,
     imports: [
         AsyncPipe,
-        Chart2Component,
+        BarChartComponent,
         ChartComponent,
         LineChartComponent,
         MatFormFieldModule,
