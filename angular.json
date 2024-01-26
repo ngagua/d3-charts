@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "d3": {
+    "d3-charts": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -63,10 +63,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "d3:build:production"
+              "buildTarget": "d3-charts:build:production"
             },
             "development": {
-              "buildTarget": "d3:build:development"
+              "buildTarget": "d3-charts:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -74,7 +74,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "d3:build"
+            "buildTarget": "d3-charts:build"
           }
         },
         "test": {
