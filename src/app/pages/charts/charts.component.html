@@ -20,10 +20,7 @@
             <app-pie-chart [data]="pieData"></app-pie-chart>
         </div>
         <div *ngIf="url === urls.LINE_CHART" class="bg-gray-200 charts-container rounded">
-            <line-chart
-                *ngIf="covidData$ | async as covidData"
-                [data]="covidData"
-            ></line-chart>
+            <line-chart [data]="mappedForLine"></line-chart>
         </div>
         <div *ngIf="url === urls.BAR_CHART" class="bg-gray-200 charts-container rounded">
             <app-chart2 [data]="data$ | async"></app-chart2>

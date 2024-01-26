@@ -10,6 +10,7 @@ import { ApiService } from '../../services/api.service'
 import * as d3 from 'd3'
 import {
     Browser,
+    MappedForLineChart,
     PieData,
     USSpendingData,
     USSpendingDataElement,
@@ -56,19 +57,30 @@ export class ChartsComponent implements OnInit {
     usSpending$ = this.apiService.getSpending().pipe(takeUntilDestroyed())
     usSpending: USSpendingData[] = []
     mappedData: USSpendingDataElement[] = []
+    mappedForLine: MappedForLineChart[] = []
     years: string[] = []
 
     ngOnInit(): void {
-        this.browserData$.subscribe((data: Browser[]) => {
-            this.browserData = data
-            // this.setPieData('now')
-            console.log('usSpending', this.browserData)
-        })
         this.usSpending$.subscribe((data: USSpendingData[]) => {
             this.usSpending = data
             this.mappedData = this.mapUSSpendingData(data)
             this.years = [...new Set(this.mappedData.map((item) => item.year))]
             this.filterByYear(this.years[0])
+
+            this.mappedForLine = this.mappedData.reduce((acc: any, curr) => {
+                const existingYear: any = acc.find((item: any) => item.year === curr.year)
+
+                if (existingYear) {
+                    existingYear[curr.department] =
+                        (existingYear[curr.department] || 0) + curr.expense
+                } else {
+                    const newObj: any = { year: curr.year }
+                    newObj[curr.department] = curr.expense
+                    acc.push(newObj)
+                }
+
+                return acc
+            }, [])
         })
     }
 

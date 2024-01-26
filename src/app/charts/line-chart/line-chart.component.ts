@@ -7,7 +7,7 @@ import {
     SimpleChanges,
 } from '@angular/core'
 import * as d3 from 'd3'
-import { CovidData } from '../../models/models'
+import { Department, MappedForLineChart } from '../../models/models'
 
 @Component({
     selector: 'line-chart',
@@ -16,7 +16,7 @@ import { CovidData } from '../../models/models'
     styleUrl: './line-chart.component.scss',
 })
 export class LineChartComponent implements OnInit, OnChanges {
-    @Input() data: CovidData[] | null | undefined
+    @Input() data: MappedForLineChart[] | null | undefined
     host: any
     svg: any
     legendContainer: any
@@ -34,18 +34,23 @@ export class LineChartComponent implements OnInit, OnChanges {
 
     left = 50
     right = 20
-    top = 40
-    bottom = 80
+    top = 60
+    bottom = 120
 
     xScale: any
     yScale: any
     colors: any
 
-    timeParse = d3.timeParse('%Y%m%d')
+    timeParse = d3.timeParse('%Y')
     niceData = d3.timeFormat('%Y-%B')
 
-    selected = ['hospitalized', 'death', 'hospitalizedCurrently']
-    active = [true, true, true]
+    selected = [
+        Department.DepartmentOfDefenseMilitaryPrograms,
+        Department.DepartmentOfEducation,
+        Department.DepartmentOfHealthAndHumanServices,
+        Department.DepartmentOfHomelandSecurity,
+    ]
+    active = [true, true, true, true]
 
     constructor(private elementRef: ElementRef) {
         this.host = d3.select(this.elementRef.nativeElement)
@@ -59,8 +64,9 @@ export class LineChartComponent implements OnInit, OnChanges {
                 name: d,
                 data: this.data
                     ?.map((p) => ({
-                        x: this.timeParse(p.date),
-                        y: p[d as keyof CovidData],
+                        x: p.year,
+                        y: p[d as keyof MappedForLineChart],
+                        department: d,
                     }))
                     ?.filter((d) => d.y !== null)
                     ?.sort((a, b) => (a.x && b.x && a.x < b.x ? -1 : 1)),
@@ -102,12 +108,12 @@ export class LineChartComponent implements OnInit, OnChanges {
         this.title = this.svg
             .append('g')
             .attr('class', 'title-container')
-            .attr(
-                'transform',
-                `translate(${this.left + 0.5 * this.innerWidth}, ${this.top - 5})`
-            )
+
             .append('text')
             .attr('class', 'label')
+            .attr('font-size', '1.5rem')
+            .attr('font-weight', 'bold')
+            .style('text-anchor', 'middle')
             .style('text-anchor', 'middle')
 
         this.dataContainer = this.svg
@@ -122,18 +128,22 @@ export class LineChartComponent implements OnInit, OnChanges {
                 'transform',
                 `translate(${this.left}, ${this.dimensions.height - 0.5 * this.bottom + 10})`
             )
+
+        const titleWidth = this.title.node().getBBox()
+        this.title.attr(
+            'transform',
+            `translate(${this.left + 0.5 * this.innerWidth}, ${this.top - 15})`
+        )
     }
 
     setParams(): void {
         const data = this.lineData
-        const parsedDates = !this.data
-            ? []
-            : (this.data?.map((d) => this.timeParse(d.date)) as Date[])
+        const parsedDates = !this.data ? [] : this.data?.map((d) => +d.year)
 
         const maxValues = data?.map((series: any) => d3.max(series.data, (d: any) => d.y))
 
         //domains
-        const xDomain = !!parsedDates ? (d3.extent(parsedDates) as any) : [0, Date.now()]
+        const xDomain = !!parsedDates ? (d3.extent(parsedDates) as any) : [0, 2022]
         const yDomain = !this.data ? [0, 100] : [0, d3.max(maxValues) as any]
         const colorDomain = this.selected
 
@@ -143,24 +153,24 @@ export class LineChartComponent implements OnInit, OnChanges {
         const colorRange = d3.schemeCategory10
 
         //scales
-        this.xScale = d3.scaleTime().domain(xDomain).range(xRange)
+        this.xScale = d3.scaleLinear().domain(xDomain).range(xRange)
         this.yScale = d3.scaleLinear().domain(yDomain).range(yRange)
         this.colors = d3.scaleOrdinal().domain(colorDomain).range(colorRange)
 
         this.line = d3
             .line()
-            .x((d: any) => this.xScale(+d.x))
+            .x((d: any) => this.xScale(d.x))
             .y((d: any) => this.yScale(+d.y))
     }
 
     setLabels(): void {
-        this.title.text('Covid 10 evolution in US')
+        this.title.text('US Spending by Department.')
     }
 
     setAxes(): void {
         this.xAxes = d3
             .axisBottom(this.xScale)
-            .ticks(d3.timeMonth.every(2))
+            .tickFormat(d3.format('') as any)
             .tickSizeOuter(0)
 
         this.xAxesContainer.transition().duration(500).call(this.xAxes)
@@ -212,6 +222,7 @@ export class LineChartComponent implements OnInit, OnChanges {
             .call(generatedLegendItems)
             .merge(legend)
             .call(updateLegendItems)
+            .attr('transform', (d: any, i: any) => `translate(0, ${i * 16})`)
             .on('mouseover', (event: any, name: string) => {
                 this.hover(name)
             })
@@ -229,23 +240,12 @@ export class LineChartComponent implements OnInit, OnChanges {
 
         legend.exit().remove()
 
-        let totalPadding = 0
-        this.legendContainer.selectAll('g.legend-item').each(function (
-            d: any,
-            i: any,
-            nodes: any
-        ) {
-            const g = d3.select(nodes[i])
-            const bbox = g.node().getBBox()
-            g.attr('transform', `translate(${totalPadding}, 0)`)
-            totalPadding += bbox.width + 10
-        })
-
         const legendWidth = this.legendContainer.node().getBBox().width
+        const legendHeight = this.legendContainer.node().getBBox().height
 
         this.legendContainer.attr(
             'transform',
-            `translate(${this.left + 0.5 * (this.innerWidth - legendWidth)}, ${this.dimensions.height - 0.5 * this.bottom + 10})`
+            `translate(${this.left + 0.5 * (this.innerWidth - legendWidth)}, ${this.dimensions.height - legendHeight})`
         )
     }
 
@@ -267,6 +267,51 @@ export class LineChartComponent implements OnInit, OnChanges {
             .style('stroke', (d: any) => this.colors(d.name))
 
         lines.exit().remove()
+        this.drawCircles()
+    }
+
+    drawCircles(): void {
+        this.dataContainer.selectAll('g.data-circle').remove()
+
+        const circles = this.dataContainer
+            .selectAll('g.data-circle')
+            .data(this.lineData, (d: any) => d.name)
+
+        circles
+            .enter()
+            .append('g')
+            .attr('class', 'data-circle')
+            .style('fill', (d: any) => this.colors(d.name))
+            .merge(circles)
+            .selectAll('circle')
+            .data((d: any) => d.data)
+            .enter()
+            .append('circle')
+            .attr('cx', (d: any) => this.xScale(d.x))
+            .attr('cy', (d: any) => this.yScale(d.y))
+            .attr('r', 4)
+            .on('mouseover', (event: MouseEvent, d: any) => {
+                this.setToolTip(event, d)
+            })
+
+        circles.exit().remove()
+    }
+
+    setToolTip(event: MouseEvent, data: any): void {
+        const tooltip = d3
+            .select('body')
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('opacity', 1)
+            .style('left', `${event.pageX + 10}px`)
+            .style('top', `${event.pageY + 10}px`)
+        tooltip.html(
+            `
+                <p><strong>Department:</strong> ${data.department}</p>
+                <p><strong>Spending:</strong> ${d3.format('$,.0f')(+data.y)}</p>
+                <p><strong>Year:</strong> ${data.x}</p>`
+        )
+        d3.select(event.target as any).on('mouseout', () => tooltip.remove())
     }
 
     updateChart(): void {
@@ -278,12 +323,13 @@ export class LineChartComponent implements OnInit, OnChanges {
     }
 
     toggleActive(selected: string): void {
-        const index = this.selected.indexOf(selected)
+        const index = this.selected.indexOf(selected as Department)
         this.active[index] = !this.active[index]
+        this.drawCircles()
     }
 
     hover(selected?: string): void {
-        const index = this.selected.indexOf(selected || '')
+        const index = this.selected.indexOf((selected as Department) || '')
         if (selected && this.active[index]) {
             this.dataContainer
                 .selectAll('path.data')

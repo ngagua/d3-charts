@@ -94,3 +94,18 @@ export interface USSpendingDataElement {
     year: string
     expense: number
 }
+
+export interface MappedForLineChart {
+    year: string
+    [Department.DepartmentOfDefenseMilitaryPrograms]: number
+    [Department.DepartmentOfEducation]: number
+    [Department.DepartmentOfHealthAndHumanServices]: number
+    [Department.DepartmentOfHomelandSecurity]: number
+}
+
+export enum Department {
+    DepartmentOfDefenseMilitaryPrograms = 'Department of Defense - Military Programs',
+    DepartmentOfEducation = 'Department of Education',
+    DepartmentOfHealthAndHumanServices = 'Department of Health and Human Services',
+    DepartmentOfHomelandSecurity = 'Department of Homeland Security',
+}
