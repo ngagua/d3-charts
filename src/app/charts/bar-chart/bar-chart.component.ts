@@ -28,7 +28,7 @@ export class BarChartComponent implements OnInit, OnChanges {
     left = 60
     right = 20
     bottom = 80
-    top = 15
+    top = 65
     dataIsFiltered = false
     sortedBySalary = false
     colors: any

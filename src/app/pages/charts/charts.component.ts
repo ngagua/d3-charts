@@ -78,8 +78,6 @@ export class ChartsComponent implements OnInit {
             this.filterByDepartment(this.departments[0])
             this.mappedForGrouped = mapDataToInterfaces(this.mappedData)
 
-            console.log('this.mappedfffData', this.mappedForGrouped)
-
             this.mappedForLine = this.mappedData.reduce((acc: any, curr) => {
                 const existingYear: any = acc.find((item: any) => item.year === curr.year)
 

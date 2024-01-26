@@ -27,6 +27,10 @@ export const routes: Routes = [
                 path: 'grouped-bar-chart',
                 component: ChartsComponent,
             },
+            {
+                path: 'stacked-bar-chart',
+                component: ChartsComponent,
+            },
         ],
     },
 ]

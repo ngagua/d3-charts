@@ -14,12 +14,16 @@ import * as d3 from 'd3'
     styleUrl: './grouped-bar-chart.component.scss',
 })
 export class GroupedBarChartComponent implements OnInit, OnChanges {
-    @Input() data: MappedForGroupedData[] | null | undefined
+    @Input() chartData: USSpendingDataElement[] | null | undefined
+    @Input() stacked = true
+
+    data: MappedForGroupedData[] = []
     host: any
     svg: any
     dataContainer: any
     xAxesContainer: any
     yAxesContainer: any
+    legendContainer: any
     xAxes: any
     yAxes: any
 
@@ -31,7 +35,7 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
 
     left = 60
     right = 20
-    bottom = 80
+    bottom = 120
     top = 15
     dataIsFiltered = false
     sortedBySalary = false
@@ -42,23 +46,48 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
         Department.DepartmentOfHealthAndHumanServices,
         Department.DepartmentOfHomelandSecurity,
     ]
-    x = d3.scaleBand().paddingInner(0.2).paddingOuter(0.2)
-    y = d3.scaleLinear()
+    xScale = d3.scaleBand().paddingInner(0.2).paddingOuter(0.2)
+    yScale = d3.scaleLinear()
+    group = d3.scaleBand().padding(0.1)
 
     constructor(element: ElementRef) {
         this.host = d3.select(element.nativeElement)
     }
 
+    get filteredData() {
+        return this.stacked ? this.data : this.data?.slice(-5)
+    }
+
     ngOnInit(): void {
+        this.data = d3
+            .groups(this.chartData || [], (d) => d.year)
+            .map((element) => ({
+                year: +element[0],
+                data: element[1],
+            }))
         this.svg = this.host.select('svg')
         this.setDimensions()
         this.setElements()
         this.updateChart()
     }
 
+    ngOnChanges(): void {
+        this.data = d3
+            .groups(this.chartData || [], (d) => d.year)
+            .map((element) => ({
+                year: +element[0],
+                data: element[1],
+            }))
+        if (!this.svg) return
+        this.setParams()
+        this.setXAxes()
+        this.draw()
+    }
+
     updateChart() {
         this.setParams()
         this.setXAxes()
+        this.setLegend()
         this.draw()
     }
 
@@ -91,6 +120,14 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
             .attr('text-anchor', 'middle')
             .attr('font-size', '1.5rem')
             .attr('font-weight', 'bold')
+
+        this.legendContainer = this.svg
+            .append('g')
+            .attr('class', 'legend-container')
+            .attr(
+                'transform',
+                `translate(${this.left}, ${this.dimensions.height - 0.5 * this.bottom + 10})`
+            )
     }
 
     setDimensions(): void {
@@ -99,21 +136,19 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
         this.innerHeight = this.dimensions.height - this.top - this.bottom
     }
 
-    ngOnChanges(): void {
-        if (!this.svg) return
-        this.setParams()
-        this.setXAxes()
-        this.draw()
-    }
-
     setParams(): void {
-        if (!this.data) return
-        const ids = this.data?.map((d) => d?.year + '')
+        if (!this.filteredData) return
+        const ids = this.filteredData?.map((d) => d?.year + '')
 
-        const maxValue = d3.max(this.data, (d) => d3.max(d.data, (e) => e.expense))
+        const maxValue = d3.max(this.filteredData, (d) =>
+            d3.max(d.data, (e) => e.expense)
+        )
 
-        this.x.domain(ids).range([0, this.innerWidth])
-        this.y.domain([0, maxValue as number]).range([this.innerHeight, 0])
+        this.xScale.domain(ids).range([0, this.innerWidth])
+        this.yScale.domain([0, maxValue as number]).range([this.innerHeight, 0])
+
+        const groups = [...new Set(this.chartData?.map((d) => d.department))]
+        this.group.domain(groups).range([0, this.xScale.bandwidth()])
 
         const colorDomain = this.selected
         const colorRange = d3.schemeCategory10
@@ -127,14 +162,18 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
             xAxisContainer
                 .selectAll('.tick text')
                 .text((d: string) => d)
-                .attr('transform', 'translate(-9, 2)rotate(-45)')
                 .attr('text-anchor', 'end')
+
+            if (this.stacked)
+                xAxisContainer
+                    .selectAll('.tick text')
+                    .attr('transform', 'translate(-9, 2)rotate(-45)')
         }
-        this.xAxes = d3.axisBottom(this.x).tickSizeOuter(0)
+        this.xAxes = d3.axisBottom(this.xScale).tickSizeOuter(0)
         this.xAxesContainer.transition().duration(500).call(updateXAxis)
 
         this.yAxes = d3
-            .axisLeft(this.y)
+            .axisLeft(this.yScale)
             .tickSizeOuter(0)
             .tickSizeInner(-this.innerWidth)
             .tickFormat(d3.format('$~s'))
@@ -145,25 +184,51 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
 
     draw(): void {
         const bars = this.dataContainer
-            .selectAll('rect')
-            .data(this.data, (d: any) => d?.year)
+            .selectAll('g.group')
+            .data(this.filteredData || [], (d: any) => d?.year)
 
-        bars.enter()
-            .append('g')
-            .attr('class', 'bar-group')
-            .selectAll('rect')
-            .data((d: any) => d.data.sort((a: any, b: any) => b.expense - a.expense))
-            .enter()
-            .append('rect')
-            .attr('class', 'bar')
-            .on('mouseover', (event: MouseEvent, d: any) => {
-                this.setToolTip(event, d)
-            })
-            .attr('x', (d: any) => this.x(d.year))
-            .attr('y', (d: any) => this.y(d.expense))
-            .attr('width', this.x.bandwidth())
-            .attr('height', (d: any) => this.innerHeight - this.y(d.expense))
-            .attr('fill', (d: any) => this.colors(d.department))
+        if (this.stacked) {
+            bars.enter()
+                .append('g')
+                .attr('class', 'bar-group')
+                .selectAll('rect')
+                .data((d: any) => d.data.sort((a: any, b: any) => b.expense - a.expense))
+                .attr('padding', 10)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar')
+                .on('mouseover', (event: MouseEvent, d: any) => {
+                    this.setToolTip(event, d)
+                })
+                .attr('x', (d: any) => this.xScale(d.year))
+                .attr('y', (d: any) => this.yScale(d.expense))
+                .attr('width', this.xScale.bandwidth())
+                .attr('height', (d: any) => this.innerHeight - this.yScale(d.expense))
+                .attr('fill', (d: any) => this.colors(d.department))
+        } else {
+            bars.enter()
+                .selectAll('g.group')
+                .data(this.filteredData?.map((d) => d.year))
+                .join('g')
+                .attr('class', 'group')
+                .selectAll('rect.data')
+                .data((d: number) =>
+                    this.filteredData
+                        ?.find((e) => e.year === d)
+                        ?.data.sort((a, b) => (b.expense < a.expense ? 1 : -1))
+                )
+                .join('rect')
+                .attr('x', (d: USSpendingDataElement) => {
+                    return (this.xScale(d.year) as any) + this.group(d.department)
+                })
+                .attr('width', this.group.bandwidth())
+                .attr('y', (d: any) => this.yScale(Number(d.expense)))
+                .attr('height', (d: any) => this.innerHeight - this.yScale(d.expense))
+                .attr('fill', (d: any) => this.colors(d.department))
+                .on('mouseover', (event: MouseEvent, d: any) => {
+                    this.setToolTip(event, d)
+                })
+        }
 
         bars.exit().remove()
     }
@@ -183,5 +248,50 @@ export class GroupedBarChartComponent implements OnInit, OnChanges {
                 <p><strong>Year:</strong> ${data.year}</p>`
         )
         d3.select(event.target as any).on('mouseout', () => tooltip.remove())
+    }
+
+    setLegend(): void {
+        const generatedLegendItems = (selection: any) => {
+            selection
+                .append('circle')
+                .attr('class', 'legend-icon')
+                .attr('cx', 3)
+                .attr('cy', -4)
+                .attr('r', 3)
+            selection
+                .append('text')
+                .attr('class', 'legend-label')
+                .attr('x', 9)
+                .style('font-size', '0.8rem')
+        }
+
+        const updateLegendItems = (selection: any) => {
+            selection
+                .selectAll('circle.legend-icon')
+                .style('fill', (d: any) => this.colors(d))
+
+            selection.selectAll('text.legend-label').text((d: any) => d)
+        }
+
+        const legend = this.legendContainer.selectAll('g.legend-item').data(this.selected)
+
+        legend
+            .enter()
+            .append('g')
+            .attr('class', 'legend-item')
+            .call(generatedLegendItems)
+            .merge(legend)
+            .call(updateLegendItems)
+            .attr('transform', (d: any, i: any) => `translate(0, ${i * 16})`)
+
+        legend.exit().remove()
+
+        const legendWidth = this.legendContainer.node().getBBox().width
+        const legendHeight = this.legendContainer.node().getBBox().height
+
+        this.legendContainer.attr(
+            'transform',
+            `translate(${this.left + 0.5 * (this.innerWidth - legendWidth)}, ${this.dimensions.height - legendHeight})`
+        )
     }
 }

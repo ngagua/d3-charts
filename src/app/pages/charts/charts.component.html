@@ -26,7 +26,7 @@
             *ngIf="url === urls.BAR_CHART"
             class="bg-gray-200 relative charts-container rounded"
         >
-            <div class="">
+            <div class="absolute w-full">
                 <mat-form-field appearance="outline" class="w-full">
                     <mat-label>Year</mat-label>
                     <mat-select
@@ -42,10 +42,19 @@
             <bar-chart [data]="mappedForBar"></bar-chart>
         </div>
         <div
+            *ngIf="url === urls.STACKED_BAR_CHART"
+            class="bg-gray-200 charts-container rounded"
+        >
+            <grouped-bar-chart [chartData]="mappedData"></grouped-bar-chart>
+        </div>
+        <div
             *ngIf="url === urls.GROUPED_BAR_CHART"
             class="bg-gray-200 charts-container rounded"
         >
-            <grouped-bar-chart [data]="mappedForGrouped"></grouped-bar-chart>
+            <grouped-bar-chart
+                [chartData]="mappedData"
+                [stacked]="false"
+            ></grouped-bar-chart>
         </div>
     </div>
 </div>
