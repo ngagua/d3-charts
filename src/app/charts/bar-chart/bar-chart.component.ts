@@ -25,7 +25,7 @@ export class BarChartComponent implements OnInit, OnChanges {
     innerWidth = 0
     innerHeight = 0
 
-    left = 60
+    left = 90
     right = 20
     bottom = 80
     top = 65
@@ -209,7 +209,7 @@ export class BarChartComponent implements OnInit, OnChanges {
             .axisLeft(this.y)
             .tickSizeOuter(0)
             .tickSizeInner(-this.innerWidth)
-            .tickFormat(d3.format('$~s'))
+            .tickFormat((d) => (+d > 0 ? `${d3.format('$,.0f')(+d / 10e5)} M` : '0'))
         this.yAxesContainer.call(this.yAxes)
 
         this.yAxesContainer.selectAll('.tick line').attr('stroke', '#ddd')

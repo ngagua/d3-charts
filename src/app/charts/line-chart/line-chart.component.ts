@@ -32,7 +32,7 @@ export class LineChartComponent implements OnInit, OnChanges {
     innerWidth = 0
     innerHeight = 0
 
-    left = 50
+    left = 90
     right = 20
     top = 60
     bottom = 120
@@ -179,7 +179,7 @@ export class LineChartComponent implements OnInit, OnChanges {
             .axisLeft(this.yScale)
             .ticks(8)
             .tickSizeOuter(0)
-            .tickFormat(d3.format('~s') as any)
+            .tickFormat((d) => (+d > 0 ? `${d3.format('$,.0f')(+d / 10e5)} M` : '0'))
             .tickSizeInner(-this.innerWidth)
 
         this.yAxesContainer.transition().duration(500).call(this.yAxes)
