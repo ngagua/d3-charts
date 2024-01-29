@@ -376,7 +376,7 @@ export class PieChartComponent implements OnInit, OnChanges {
             this.data?.data.filter((e) => !this.hiddenIds.has(e.id)),
             (d: any) => d.value
         )
-        return ((+data.value / total) * 100).toFixed(2) + '%'
+        return ((+data.value / total) * 100).toFixed(0) + '%'
     }
 
     updateChart() {
