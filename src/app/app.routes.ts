@@ -10,7 +10,7 @@ export const routes: Routes = [
     {
         path: 'charts',
         children: [
-            // { path: '', redirectTo: 'pie-chart', pathMatch: 'full' },
+            { path: '', redirectTo: 'pie-chart', pathMatch: 'full' },
             {
                 path: 'pie-chart',
                 component: ChartsComponent,
