@@ -48,9 +48,7 @@ export class TowerOfHanoiComponent implements OnInit {
         [],
     ]
 
-    ngOnInit() {
-        this.openDialog()
-    }
+    ngOnInit() {}
 
     openDialog() {
         const dialogRef = this.dialog.open(DialogComponent, {
