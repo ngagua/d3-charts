@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router'
 import { ChartsComponent } from './pages/charts/charts.component'
+import { TowerOfHanoiComponent } from './pages/tower-of-hanoi/tower-of-hanoi.component'
 
 export const routes: Routes = [
     {
@@ -30,6 +31,10 @@ export const routes: Routes = [
             {
                 path: 'stacked-bar-chart',
                 component: ChartsComponent,
+            },
+            {
+                path: 'tower-of-hanoi',
+                component: TowerOfHanoiComponent,
             },
         ],
     },

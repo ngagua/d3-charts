@@ -66,5 +66,10 @@ export class LandingPageComponent {
             icon: 'grouped_bar_chart',
             navigationLink: 'charts/grouped-bar-chart',
         },
+        {
+            menuItemTitle: 'Tower',
+            icon: 'cell_tower',
+            navigationLink: 'charts/tower-of-hanoi',
+        },
     ]
 }

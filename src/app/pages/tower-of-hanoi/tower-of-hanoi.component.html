@@ -1,0 +1,34 @@
+<div class="flex container w-full gap-4 p-4 items-center relative">
+    <mat-form-field appearance="outline" class="absolute top-2 left-2">
+        <mat-label>Number of Towers</mat-label>
+        <mat-select (selectionChange)="setFloorNumber($event)" [value]="options[0]">
+            @for (item of options; track item) {
+                <mat-option [value]="item">{{ item }}</mat-option>
+            }
+        </mat-select>
+    </mat-form-field>
+    <div cdkDropListGroup class="h-3/4 flex w-full">
+        @for (tower of towers; track tower) {
+            <div
+                cdkDropList
+                [cdkDropListData]="tower"
+                cdkDropListSortingDisabled
+                (cdkDropListDropped)="drop($event)"
+                class="bg-blue-800 flex-1 relative items-center flex flex-col justify-end gap-2"
+            >
+                <div
+                    class="h-3/4 w-4 bg-black absolute bottom-0 left-1/2 -translate-x-1/2"
+                ></div>
+                @for (floor of tower; track floor) {
+                    <div
+                        cdkDrag
+                        [cdkDragData]="floor"
+                        class="h-10 bg-blue-200 rounded z-10 cursor-pointer cdk-drag-animating"
+                        [style.background-color]="floor.color"
+                        [style.width.%]="floor.value * 12"
+                    ></div>
+                }
+            </div>
+        }
+    </div>
+</div>
