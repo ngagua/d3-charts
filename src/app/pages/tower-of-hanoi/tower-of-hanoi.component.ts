@@ -3,6 +3,7 @@ import { NgClass } from '@angular/common'
 import {
     CdkDrag,
     CdkDragDrop,
+    CdkDragMove,
     CdkDropList,
     CdkDropListGroup,
     transferArrayItem,
@@ -38,6 +39,7 @@ export class TowerOfHanoiComponent implements OnInit {
     dialog = inject(Dialog)
     options = [3, 4, 5, 6, 7, 8]
     colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet', 'pink']
+    lockAxis: 'x' | 'y' = 'y'
     towers: Floor[][] = [
         [
             { value: 1, color: 'red' },
@@ -91,6 +93,14 @@ export class TowerOfHanoiComponent implements OnInit {
             this.towers[1].length === this.floorNumber
         ) {
             this.openDialog()
+        }
+    }
+
+    onDragMoved(event: CdkDragMove<Floor>) {
+        if (event.distance.y < -360) {
+            this.lockAxis = 'x'
+        } else {
+            this.lockAxis = 'y'
         }
     }
 }

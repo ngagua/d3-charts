@@ -7,7 +7,7 @@
             }
         </mat-select>
     </mat-form-field>
-    <div cdkDropListGroup class="h-3/4 flex w-full">
+    <div cdkDropListGroup class="tower-container flex">
         @for (tower of towers; track tower) {
             <div
                 cdkDropList
@@ -17,12 +17,16 @@
                 class="bg-blue-800 flex-1 relative items-center flex flex-col justify-end gap-2"
             >
                 <div
+                    [style.height]="floorNumber * 50 + 'px'"
                     class="h-3/4 w-4 bg-black absolute bottom-0 left-1/2 -translate-x-1/2"
                 ></div>
-                @for (floor of tower; track floor) {
+                @for (floor of tower; track floor; let i = $index) {
                     <div
                         cdkDrag
                         [cdkDragData]="floor"
+                        (cdkDragMoved)="onDragMoved($event)"
+                        [cdkDragDisabled]="i !== 0"
+                        cdkDragBoundary=".tower-container"
                         class="h-10 bg-blue-200 rounded z-10 cursor-pointer cdk-drag-animating"
                         [style.background-color]="floor.color"
                         [style.width.%]="floor.value * 12"
